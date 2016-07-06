@@ -1,0 +1,6 @@
+framework module LinkedInRESTSDK {
+  umbrella header "LinkedInRESTSDK-umbrella.h"
+
+  export *
+  module * { export * }
+}

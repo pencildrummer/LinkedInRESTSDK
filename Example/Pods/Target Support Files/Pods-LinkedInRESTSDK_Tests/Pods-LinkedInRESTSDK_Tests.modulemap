@@ -1,0 +1,6 @@
+framework module Pods_LinkedInRESTSDK_Tests {
+  umbrella header "Pods-LinkedInRESTSDK_Tests-umbrella.h"
+
+  export *
+  module * { export * }
+}
