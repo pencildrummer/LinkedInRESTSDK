@@ -118,7 +118,7 @@ enum LinkedInRESTRouter: URLRequestConvertible {
     }
     
     var URLRequest: NSMutableURLRequest {
-        let request: NSMutableURLRequest = NSMutableURLRequest(URL: baseURL.URLByAppendingPathComponent(path))
+        let request: NSMutableURLRequest = NSMutableURLRequest(URL: baseURL.URLByAppendingPathComponent(path)!)
         request.HTTPMethod = method.rawValue
         
         // Configure return format
