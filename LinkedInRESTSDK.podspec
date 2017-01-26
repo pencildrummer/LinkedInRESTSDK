@@ -20,7 +20,7 @@ Pod::Spec.new do |s|
 
   s.source_files = 'LinkedInRESTSDK/Classes/**/*'
 
-  s.dependency 'Alamofire'
+  s.dependency 'Alamofire', '~> 3.0'
   s.dependency 'AlamofireObjectMapper', '~> 3.0'
 
 end
