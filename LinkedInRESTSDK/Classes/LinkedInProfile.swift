@@ -9,22 +9,22 @@
 import Foundation
 import ObjectMapper
 
-public class LinkedInProfile: NSObject, Mappable {
+open class LinkedInProfile: NSObject, Mappable {
     
-    public private(set) var id: String!
-    public private(set) var firstName: String!
-    public private(set) var lastName: String!
-    public private(set) var maidenName: String?
-    public private(set) var formattedPhone: String?
-    public private(set) var headline: String?
+    open fileprivate(set) var id: String!
+    open fileprivate(set) var firstName: String!
+    open fileprivate(set) var lastName: String!
+    open fileprivate(set) var maidenName: String?
+    open fileprivate(set) var formattedPhone: String?
+    open fileprivate(set) var headline: String?
     
-    public private(set) var publicProfileURL: NSURL?
+    open fileprivate(set) var publicProfileURL: URL?
     
     required public init?(_ map: Map) {
         
     }
     
-    public func mapping(map: Map) {
+    open func mapping(_ map: Map) {
         id <- map["id"]
         firstName <- map["firstName"]
         lastName <- map["lastName"]

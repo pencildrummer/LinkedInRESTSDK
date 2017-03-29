@@ -8,48 +8,48 @@
 
 import Foundation
 
-public class LinkedInRESTToken: NSObject, NSCoding {
+open class LinkedInRESTToken: NSObject, NSCoding {
     
-    private static let kCurrentTokenKey = "com.fabioborella.pencildrummer.linkedinrest.current_token"
+    fileprivate static let kCurrentTokenKey = "com.fabioborella.pencildrummer.linkedinrest.current_token"
     static var currentToken: LinkedInRESTToken? {
         set {
             if let token = newValue {
-                let tokenData = NSKeyedArchiver.archivedDataWithRootObject(token)
-                NSUserDefaults.standardUserDefaults().setObject(tokenData, forKey: kCurrentTokenKey)
+                let tokenData = NSKeyedArchiver.archivedData(withRootObject: token)
+                UserDefaults.standard.set(tokenData, forKey: kCurrentTokenKey)
             } else {
-                NSUserDefaults.standardUserDefaults().removeObjectForKey(kCurrentTokenKey)
+                UserDefaults.standard.removeObject(forKey: kCurrentTokenKey)
             }
-            NSUserDefaults.standardUserDefaults().synchronize()
+            UserDefaults.standard.synchronize()
         }
         get {
-            if let tokenData = NSUserDefaults.standardUserDefaults().dataForKey(kCurrentTokenKey) {
-                return NSKeyedUnarchiver.unarchiveObjectWithData(tokenData) as? LinkedInRESTToken
+            if let tokenData = UserDefaults.standard.data(forKey: kCurrentTokenKey) {
+                return NSKeyedUnarchiver.unarchiveObject(with: tokenData) as? LinkedInRESTToken
             }
             return nil
         }
     }
     
-    public private(set) var accessToken: String!
-    public private(set) var expiresIn: NSTimeInterval!
+    open fileprivate(set) var accessToken: String!
+    open fileprivate(set) var expiresIn: TimeInterval!
     /*public var isExpired: Bool {
         return NSDate().timeIntervalSince1970 - expiresIn > 0
     }*/
  
     init(JSON: [String: AnyObject]) {
         accessToken = JSON["access_token"] as! String
-        expiresIn = NSTimeInterval(JSON["expires_in"] as! String)
+        expiresIn = TimeInterval(JSON["expires_in"] as! String)
     }
     
     // Coding
     
     required public init?(coder aDecoder: NSCoder) {
         super.init()
-        accessToken = aDecoder.decodeObjectForKey("accessToken") as! String
-        expiresIn = aDecoder.decodeDoubleForKey("expiresIn")
+        accessToken = aDecoder.decodeObject(forKey: "accessToken") as! String
+        expiresIn = aDecoder.decodeDouble(forKey: "expiresIn")
     }
     
-    public func encodeWithCoder(aCoder: NSCoder) {
-        aCoder.encodeObject(accessToken, forKey: "accessToken")
-        aCoder.encodeDouble(expiresIn, forKey: "expiresIn")
+    open func encode(with aCoder: NSCoder) {
+        aCoder.encode(accessToken, forKey: "accessToken")
+        aCoder.encode(expiresIn, forKey: "expiresIn")
     }
 }
