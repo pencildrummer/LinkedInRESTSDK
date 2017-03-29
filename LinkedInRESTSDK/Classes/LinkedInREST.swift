@@ -39,31 +39,32 @@ open class LinkedInREST {
     open static var clientSecret: String!
     open static var redirectURI: String!
     
-    open class func getAccessToken(_ code: String, completion: (success: Bool, error: NSError?) -> ()) {
-        Alamofire.request(LinkedInRESTRouter.GetAccessToken(code)).validate(statusCode: 200..<300).responseJSON { (response) in
+    open class func getAccessToken(_ code: String, completion: @escaping (_ success: Bool, _ error: Error?) -> ()) {
+        Alamofire.request(LinkedInRESTRouter.getAccessToken(code)).validate(statusCode: 200..<300).responseJSON { (response) in
             switch response.result {
-            case .Success(let JSON):
+            case .success(let JSON):
                 let token = LinkedInRESTToken(JSON: JSON as! [String: AnyObject])
                 LinkedInRESTToken.currentToken = token
                 
-                completion(success: true, error: nil)
-            case .Failure(let error):
-                completion(success: false, error: error)
+                completion(true, nil)
+            case .failure(let error):
+                completion(false, error)
             }
         }
     }
     
-    open class func getUserProfile(_ fields: [String]?, completion: (success: Bool, profile: LinkedInProfile?, error: NSError?) -> ()) {
+    open class func getUserProfile(_ fields: [String]?, completion: @escaping (_ success: Bool, _ profile: LinkedInProfile?, _ error: Error?) -> ()) {
         getUserProfile(nil, fields: fields, completion: completion)
     }
     
-    open class func getUserProfile(_ profileId: String?, fields: [String]?, completion: (success: Bool, profile: LinkedInProfile?, error: NSError?) -> ()) {
-        Alamofire.request(LinkedInRESTRouter.GetUserProfile(profileId, fields)).validate(statusCode: 200..<300).responseObject { (response: Response<LinkedInProfile, NSError>) in
+    open class func getUserProfile(_ profileId: String?, fields: [String]?, completion: @escaping (_ success: Bool, _ profile: LinkedInProfile?, _ error: Error?) -> ()) {
+        Alamofire.request(LinkedInRESTRouter.getUserProfile(profileId, fields)).validate(statusCode: 200..<300)
+            .responseObject { (response: DataResponse<LinkedInProfile>) in
             switch response.result {
-            case .Success(let profile):
-                completion(success: true, profile: profile, error: nil)
-            case .Failure(let error):
-                completion(success: false, profile: nil, error: error)
+            case .success(let profile):
+                completion(true, profile, nil)
+            case .failure(let error):
+                completion(false, nil, error)
             }
         }
     }
@@ -117,16 +118,16 @@ enum LinkedInRESTRouter: URLRequestConvertible {
         }
     }
     
-    var method: Alamofire.Method {
+    var method: Alamofire.HTTPMethod {
         switch self {
         case .getAccessToken(_):
-            return .GET
+            return .get
         default:
-            return .GET
+            return .get
         }
     }
     
-    var parameters: [String: AnyObject]? {
+    var parameters: [String: Any]? {
         switch self {
         case .getAccessToken(let code):
             return [
@@ -141,9 +142,9 @@ enum LinkedInRESTRouter: URLRequestConvertible {
         }
     }
     
-    var URLRequest: NSMutableURLRequest {
-        let request: NSMutableURLRequest = NSMutableURLRequest(url: baseURL.appendingPathComponent(path)!)
-        request.HTTPMethod = method.rawValue
+    func asURLRequest() throws -> URLRequest {
+        var request = URLRequest(url: baseURL.appendingPathComponent(path))
+        request.httpMethod = method.rawValue
         
         // Configure return format
         
@@ -158,8 +159,7 @@ enum LinkedInRESTRouter: URLRequestConvertible {
         }
         
         // Configure parameters
-        
-        return Alamofire.ParameterEncoding.URL.encode(request, parameters: parameters).0
+        return try Alamofire.JSONEncoding.default.encode(request, with: parameters)
     }
     
 }

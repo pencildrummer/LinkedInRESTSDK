@@ -20,11 +20,11 @@ open class LinkedInProfile: NSObject, Mappable {
     
     open fileprivate(set) var publicProfileURL: URL?
     
-    required public init?(_ map: Map) {
+    required public init?(map: Map) {
         
     }
     
-    open func mapping(_ map: Map) {
+    open func mapping(map: Map) {
         id <- map["id"]
         firstName <- map["firstName"]
         lastName <- map["lastName"]
