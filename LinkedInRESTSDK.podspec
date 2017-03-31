@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'LinkedInRESTSDK'
-  s.version          = '0.1.1'
+  s.version          = '0.2.0'
   s.summary          = 'A short description of LinkedInRESTSDK.'
 
   s.homepage         = 'https://github.com/pencildrummer/LinkedInRESTSDK'
