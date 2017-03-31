@@ -8,38 +8,63 @@
 
 import Alamofire
 import AlamofireObjectMapper
+// FIXME: comparison operators with optionals were removed from the Swift Standard Libary.
+// Consider refactoring the code to use the non-optional operators.
+fileprivate func < <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
+  switch (lhs, rhs) {
+  case let (l?, r?):
+    return l < r
+  case (nil, _?):
+    return true
+  default:
+    return false
+  }
+}
 
-public class LinkedInREST {
+// FIXME: comparison operators with optionals were removed from the Swift Standard Libary.
+// Consider refactoring the code to use the non-optional operators.
+fileprivate func > <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
+  switch (lhs, rhs) {
+  case let (l?, r?):
+    return l > r
+  default:
+    return rhs < lhs
+  }
+}
+
+
+open class LinkedInREST {
     
-    public static var clientID: String!
-    public static var clientSecret: String!
-    public static var redirectURI: String!
+    open static var clientID: String!
+    open static var clientSecret: String!
+    open static var redirectURI: String!
     
-    public class func getAccessToken(code: String, completion: (success: Bool, error: NSError?) -> ()) {
-        Alamofire.request(LinkedInRESTRouter.GetAccessToken(code)).validate(statusCode: 200..<300).responseJSON { (response) in
+    open class func getAccessToken(_ code: String, completion: @escaping (_ success: Bool, _ error: Error?) -> ()) {
+        Alamofire.request(LinkedInRESTRouter.getAccessToken(code)).validate(statusCode: 200..<300).responseJSON { (response) in
             switch response.result {
-            case .Success(let JSON):
+            case .success(let JSON):
                 let token = LinkedInRESTToken(JSON: JSON as! [String: AnyObject])
                 LinkedInRESTToken.currentToken = token
                 
-                completion(success: true, error: nil)
-            case .Failure(let error):
-                completion(success: false, error: error)
+                completion(true, nil)
+            case .failure(let error):
+                completion(false, error)
             }
         }
     }
     
-    public class func getUserProfile(fields: [String]?, completion: (success: Bool, profile: LinkedInProfile?, error: NSError?) -> ()) {
+    open class func getUserProfile(_ fields: [String]?, completion: @escaping (_ success: Bool, _ profile: LinkedInProfile?, _ error: Error?) -> ()) {
         getUserProfile(nil, fields: fields, completion: completion)
     }
     
-    public class func getUserProfile(profileId: String?, fields: [String]?, completion: (success: Bool, profile: LinkedInProfile?, error: NSError?) -> ()) {
-        Alamofire.request(LinkedInRESTRouter.GetUserProfile(profileId, fields)).validate(statusCode: 200..<300).responseObject { (response: Response<LinkedInProfile, NSError>) in
+    open class func getUserProfile(_ profileId: String?, fields: [String]?, completion: @escaping (_ success: Bool, _ profile: LinkedInProfile?, _ error: Error?) -> ()) {
+        Alamofire.request(LinkedInRESTRouter.getUserProfile(profileId, fields)).validate(statusCode: 200..<300)
+            .responseObject { (response: DataResponse<LinkedInProfile>) in
             switch response.result {
-            case .Success(let profile):
-                completion(success: true, profile: profile, error: nil)
-            case .Failure(let error):
-                completion(success: false, profile: nil, error: error)
+            case .success(let profile):
+                completion(true, profile, nil)
+            case .failure(let error):
+                completion(false, nil, error)
             }
         }
     }
@@ -48,7 +73,7 @@ public class LinkedInREST {
 
 extension Request {
     
-    private func debugLog() -> Self {
+    fileprivate func debugLog() -> Self {
         //debugPrint(self)
         return self
     }
@@ -58,53 +83,53 @@ enum LinkedInRESTRouter: URLRequestConvertible {
     
     static var format: String? = "json"
     
-    case GetAccessToken(String)
+    case getAccessToken(String)
     
-    case GetUserProfile(String?, [String]?)
+    case getUserProfile(String?, [String]?)
     
     var isAPI: Bool {
         switch self {
-        case .GetAccessToken(_):
+        case .getAccessToken(_):
             return false
         default:
             return true
         }
     }
     
-    var baseURL: NSURL {
+    var baseURL: URL {
         switch self {
-        case .GetAccessToken(_):
-            return NSURL(string: "https://www.linkedin.com/")!
+        case .getAccessToken(_):
+            return URL(string: "https://www.linkedin.com/")!
         default:
-            return NSURL(string: "https://api.linkedin.com/v1/")!
+            return URL(string: "https://api.linkedin.com/v1/")!
         }
     }
     
     var path: String {
         switch self {
-        case .GetAccessToken(_):
+        case .getAccessToken(_):
             return "oauth/v2/accessToken"
-        case .GetUserProfile(let profileId, let fields):
+        case .getUserProfile(let profileId, let fields):
             var path = "people/~"
             if fields?.count > 0 {
-                path = path.stringByAppendingString(":(\(fields!.joinWithSeparator(",")))")
+                path = path + ":(\(fields!.joined(separator: ",")))"
             }
             return path
         }
     }
     
-    var method: Alamofire.Method {
+    var method: Alamofire.HTTPMethod {
         switch self {
-        case .GetAccessToken(_):
-            return .GET
+        case .getAccessToken(_):
+            return .get
         default:
-            return .GET
+            return .get
         }
     }
     
-    var parameters: [String: AnyObject]? {
+    var parameters: [String: Any]? {
         switch self {
-        case .GetAccessToken(let code):
+        case .getAccessToken(let code):
             return [
                 "grant_type" : "authorization_code",
                 "code" : code,
@@ -117,9 +142,9 @@ enum LinkedInRESTRouter: URLRequestConvertible {
         }
     }
     
-    var URLRequest: NSMutableURLRequest {
-        let request: NSMutableURLRequest = NSMutableURLRequest(URL: baseURL.URLByAppendingPathComponent(path)!)
-        request.HTTPMethod = method.rawValue
+    func asURLRequest() throws -> URLRequest {
+        var request = URLRequest(url: baseURL.appendingPathComponent(path))
+        request.httpMethod = method.rawValue
         
         // Configure return format
         
@@ -134,8 +159,7 @@ enum LinkedInRESTRouter: URLRequestConvertible {
         }
         
         // Configure parameters
-        
-        return Alamofire.ParameterEncoding.URL.encode(request, parameters: parameters).0
+        return try Alamofire.JSONEncoding.default.encode(request, with: parameters)
     }
     
 }
