@@ -37,7 +37,7 @@ open class LinkedInRESTToken: NSObject, NSCoding {
  
     init(JSON: [String: AnyObject]) {
         accessToken = JSON["access_token"] as! String
-        expiresIn = TimeInterval(JSON["expires_in"] as! String)
+        expiresIn = TimeInterval(JSON["expires_in"] as! Int)
     }
     
     // Coding
@@ -45,7 +45,7 @@ open class LinkedInRESTToken: NSObject, NSCoding {
     required public init?(coder aDecoder: NSCoder) {
         super.init()
         accessToken = aDecoder.decodeObject(forKey: "accessToken") as! String
-        expiresIn = aDecoder.decodeDouble(forKey: "expiresIn")
+        expiresIn = aDecoder.decodeObject(forKey: "expiresIn") as! TimeInterval
     }
     
     open func encode(with aCoder: NSCoder) {

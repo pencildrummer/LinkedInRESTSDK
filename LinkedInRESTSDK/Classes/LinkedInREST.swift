@@ -59,7 +59,9 @@ open class LinkedInREST {
     
     open class func getUserProfile(_ profileId: String?, fields: [String]?, completion: @escaping (_ success: Bool, _ profile: LinkedInProfile?, _ error: Error?) -> ()) {
         Alamofire.request(LinkedInRESTRouter.getUserProfile(profileId, fields)).validate(statusCode: 200..<300)
+            .debugLog()
             .responseObject { (response: DataResponse<LinkedInProfile>) in
+                response.debugLog()
             switch response.result {
             case .success(let profile):
                 completion(true, profile, nil)
@@ -71,11 +73,31 @@ open class LinkedInREST {
     
 }
 
-extension Request {
+extension Alamofire.Request {
     
     fileprivate func debugLog() -> Self {
-        //debugPrint(self)
+        debugPrint(self)
         return self
+    }
+}
+
+extension Alamofire.DataResponse {
+    
+    public func debugLog() {
+        print("- RESPONSE -")
+        debugPrint(self.response)
+        if let valueData = self.data {
+            if let JSON = try? JSONSerialization.jsonObject(with: valueData, options: []),
+                let JSONData = try? JSONSerialization.data(withJSONObject: JSON, options: [.prettyPrinted]),
+                let prettyJSON = String(data: JSONData, encoding: String.Encoding.utf8) {
+                print("Response raw body - JSON pretty:")
+                print(prettyJSON)
+            } else if let dataString = String(data: valueData, encoding: String.Encoding.utf8) {
+                print("Response raw body:", dataString)
+            }
+        } else {
+            debugPrint("Response raw body: EMPTY")
+        }
     }
 }
 
@@ -146,20 +168,29 @@ enum LinkedInRESTRouter: URLRequestConvertible {
         var request = URLRequest(url: baseURL.appendingPathComponent(path))
         request.httpMethod = method.rawValue
         
+        var encoding: ParameterEncoding!
+        
         // Configure return format
         
         if isAPI {
+            
+            encoding = Alamofire.URLEncoding.default
+            
             request.setValue(LinkedInRESTRouter.format, forHTTPHeaderField: "x-li-format")
             
             // Configuration authorization header
             
             if let currentToken = LinkedInRESTToken.currentToken {
-                request.setValue("Bearer \(currentToken.accessToken)", forHTTPHeaderField: "Authorization")
+                request.setValue("Bearer \(currentToken.accessToken!)", forHTTPHeaderField: "Authorization")
             }
+            
+        } else {
+            
+            encoding = Alamofire.URLEncoding.default
+            
         }
         
-        // Configure parameters
-        return try Alamofire.JSONEncoding.default.encode(request, with: parameters)
+        return try encoding.encode(request, with: parameters)
     }
     
 }
