@@ -85,7 +85,7 @@ extension Alamofire.DataResponse {
     
     public func debugLog() {
         print("- RESPONSE -")
-        debugPrint(self.response)
+        debugPrint(self.response as Any)
         if let valueData = self.data {
             if let JSON = try? JSONSerialization.jsonObject(with: valueData, options: []),
                 let JSONData = try? JSONSerialization.data(withJSONObject: JSON, options: [.prettyPrinted]),
@@ -131,7 +131,7 @@ enum LinkedInRESTRouter: URLRequestConvertible {
         switch self {
         case .getAccessToken(_):
             return "oauth/v2/accessToken"
-        case .getUserProfile(let profileId, let fields):
+        case .getUserProfile(_, let fields):
             var path = "people/~"
             if fields?.count > 0 {
                 path = path + ":(\(fields!.joined(separator: ",")))"
